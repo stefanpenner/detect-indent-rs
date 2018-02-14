@@ -1,0 +1,8 @@
+[package]
+name = "detect-indent"
+description = "Detect the indentation of code"
+version = "0.1.0"
+authors = ["Stefan Penner <stefan.penner@gmail.com>"]
+
+[dependencies]
+regex = "0.2"
