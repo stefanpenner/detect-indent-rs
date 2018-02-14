@@ -3,6 +3,8 @@ extern crate regex;
 use regex::Regex;
 use std::collections::HashMap;
 
+#[macro_use] extern crate lazy_static;
+
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
 pub enum IndentKind {
     Space,
@@ -56,9 +58,12 @@ fn most_used(indents: &HashMap<isize, Usage>) -> usize {
 }
 
 pub fn detect_indent(string: &str) -> Indent {
+    lazy_static! {
+        static ref INDENT_REGEX: Regex = Regex::new(r"^(?:( )+|\t+)").unwrap();
+    }
+
     let mut spaces = 0;
     let mut tabs   = 0;
-    let indent_regex = Regex::new(r"^(?:( )+|\t+)").unwrap();
     let mut indents: HashMap<isize, Usage> = HashMap::new();
 
     let mut prev = 0;
@@ -69,7 +74,7 @@ pub fn detect_indent(string: &str) -> Indent {
         if line.is_empty() { continue; }
         let mut indent = 0;
 
-        match indent_regex.captures(line) {
+        match INDENT_REGEX.captures(line) {
             Some(captures) => {
                 captures.get(0).map( |capture| {
                     let string = capture.as_str();
