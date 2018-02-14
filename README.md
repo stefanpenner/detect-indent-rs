@@ -19,14 +19,14 @@ Pass in a string of any kind of text and get the indentation.
 
 Add this to your `Cargo.toml`
 
-```
+```toml
 [dependencies]
 detect-indent = "0.1"
 ```
 
 and this to your crate root
 
-```rs
+```rust
 extern crate detect_indent;
 
 fn main() {
