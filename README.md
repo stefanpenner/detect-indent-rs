@@ -1,4 +1,4 @@
-# detect-indent-rs
+# detect-indent-rs [![Build Status](https://travis-ci.org/stefanpenner/detect-indent-rs.svg?branch=master)](https://travis-ci.org/stefanpenner/detect-indent-rs)
 
 rust port of
 (sindresorhus/detect-indent)[https://github.com/sindresorhus/detect-indent] All
