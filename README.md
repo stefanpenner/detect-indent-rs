@@ -30,7 +30,7 @@ and this to your crate root
 extern crate detect_indent;
 
 fn main() {
-  println!(detect_indent(""));
+  println!("{:?}", detect_indent(""));
 }
 ```
 
