@@ -28,6 +28,7 @@ and this to your crate root
 
 ```rust
 extern crate detect_indent;
+use detect_indent::detect_indent;
 
 fn main() {
   println!("{:?}", detect_indent(""));
