@@ -64,9 +64,10 @@ pub fn detect_indent(string: &str) -> Indent {
 
     let mut spaces = 0;
     let mut tabs   = 0;
-    let mut indents: HashMap<isize, Usage> = HashMap::new();
+    let mut indents : HashMap<isize, Usage> = HashMap::new();
 
     let mut prev = 0;
+
     let mut current : Option<isize> = None;
     let mut key;
 
