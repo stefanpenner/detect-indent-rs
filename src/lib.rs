@@ -36,7 +36,7 @@ impl Indent {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug)]
 struct Usage {
     used: isize,
     weight: isize,
