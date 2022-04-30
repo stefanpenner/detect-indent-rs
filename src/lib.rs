@@ -17,7 +17,7 @@ impl IndentKind {
     }
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq)]
 pub struct Indent {
     amount: usize,
     indent: String,
