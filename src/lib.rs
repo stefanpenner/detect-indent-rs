@@ -1,21 +1,18 @@
-extern crate regex;
-
+use lazy_static::lazy_static;
 use regex::Regex;
 use std::collections::HashMap;
-
-#[macro_use] extern crate lazy_static;
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
 pub enum IndentKind {
     Space,
-    Tab
+    Tab,
 }
 
 impl IndentKind {
     pub fn repeat(&self, times: usize) -> String {
         match *self {
-            IndentKind::Space => { " ".repeat(times) },
-            IndentKind::Tab => { "\t".repeat(times) }
+            IndentKind::Space => " ".repeat(times),
+            IndentKind::Tab => "\t".repeat(times),
         }
     }
 }
@@ -24,13 +21,19 @@ impl IndentKind {
 pub struct Indent {
     amount: usize,
     indent: String,
-    kind: Option<IndentKind>
+    kind: Option<IndentKind>,
 }
 
 impl Indent {
-    pub fn amount(&self) -> usize { self.amount }
-    pub fn indent(&self) -> &str { &self.indent }
-    pub fn kind(&self) -> Option<IndentKind> { self.kind }
+    pub fn amount(&self) -> usize {
+        self.amount
+    }
+    pub fn indent(&self) -> &str {
+        &self.indent
+    }
+    pub fn kind(&self) -> Option<IndentKind> {
+        self.kind
+    }
 }
 
 #[derive(Debug, PartialEq)]
@@ -44,7 +47,7 @@ fn most_used(indents: &HashMap<isize, Usage>) -> usize {
     let mut max_used = 0;
     let mut max_weight = 0;
 
-    for (&key, ref usage) in indents.iter() {
+    for (&key, usage) in indents.iter() {
         if usage.used > max_used || (usage.used == max_used && usage.weight > max_weight) {
             max_used = usage.used;
             max_weight = usage.weight;
@@ -52,7 +55,10 @@ fn most_used(indents: &HashMap<isize, Usage>) -> usize {
         }
     }
 
-    assert!(result >= 0, "detect-irdent::most_used cannot return a negative");
+    assert!(
+        result >= 0,
+        "detect-irdent::most_used cannot return a negative"
+    );
 
     result as usize
 }
@@ -63,20 +69,22 @@ pub fn detect_indent(string: &str) -> Indent {
     }
 
     let mut spaces = 0;
-    let mut tabs   = 0;
+    let mut tabs = 0;
     let mut indents: HashMap<isize, Usage> = HashMap::new();
 
     let mut prev = 0;
-    let mut current : Option<isize> = None;
+    let mut current: Option<isize> = None;
     let mut key;
 
     for line in string.lines() {
-        if line.is_empty() { continue; }
+        if line.is_empty() {
+            continue;
+        }
         let mut indent = 0;
 
         match INDENT_REGEX.captures(line) {
             Some(captures) => {
-                captures.get(0).map( |capture| {
+                if let Some(capture) = captures.get(0) {
                     let string = capture.as_str();
                     indent = string.len();
 
@@ -84,54 +92,53 @@ pub fn detect_indent(string: &str) -> Indent {
                         ' ' => spaces += 1,
                         _ => tabs += 1,
                     }
-                });
+                };
             }
 
-            None => indent = 0
+            None => indent = 0,
         }
 
-        assert!(indent <= (std::isize::MAX as usize), "indent greater than std::isize::MAX");
+        assert!(
+            indent <= (std::isize::MAX as usize),
+            "indent greater than std::isize::MAX"
+        );
         let iindent = indent as isize;
 
         let diff = iindent - prev;
         prev = iindent;
 
-        if diff != 0  {
+        if diff != 0 {
             key = diff.abs();
             current = Some(key);
 
-            indents.entry(key).or_insert(Usage { used: 0, weight: 0 }).used += 1;
+            indents
+                .entry(key)
+                .or_insert(Usage { used: 0, weight: 0 })
+                .used += 1;
         } else {
             match current {
                 Some(key) => {
                     indents.get_mut(&key).unwrap().used += 1;
                 }
-                None => { }
+                None => {}
             }
         }
     }
 
-    let kind;
-    let indent;
     let amount = most_used(&indents);
 
-    if amount == 0 {
-        kind = None;
-        indent = "".to_string();
+    let (kind, indent) = if amount == 0 {
+        (None, "".to_string())
+    } else if spaces >= tabs {
+        (Some(IndentKind::Space), IndentKind::Space.repeat(amount))
     } else {
-        if spaces >= tabs {
-            kind = Some(IndentKind::Space);
-            indent = IndentKind::Space.repeat(amount);
-        } else {
-            kind = Some(IndentKind::Tab);
-            indent = IndentKind::Tab.repeat(amount);
-        }
-    }
+        (Some(IndentKind::Tab), IndentKind::Tab.repeat(amount))
+    };
 
-    return Indent {
-        amount: amount as usize,
+    Indent {
+        amount,
         indent,
-        kind
+        kind,
     }
 }
 
@@ -139,80 +146,82 @@ pub fn detect_indent(string: &str) -> Indent {
 mod tests {
     use super::*;
 
-    use std::fs::File;
-    use std::io::prelude::*;
-
-    fn string_from_file(filepath: &str) -> String {
-        let mut contents = String::new();
-        let mut file = File::open(filepath).expect(&format!("no file: {}", filepath));
-        file.read_to_string(&mut contents).expect(&format!("no contents for file: {}", filepath));
-        contents
-    }
-
     fn indent_from_file(filepath: &str) -> Indent {
-        let contents = string_from_file(filepath);
-        return detect_indent(&contents);
+        let contents = std::fs::read_to_string(filepath)
+            .unwrap_or_else(|e| panic!("Could not read file {filepath}: {e:?}"));
+        detect_indent(&contents)
     }
 
     #[test]
     fn mixed_space() {
-        assert_eq!(indent_from_file("fixture/mixed-space.js"),
-        Indent {
-            amount: 4,
-            indent: "    ".to_string(),
-            kind: Some(IndentKind::Space)
-        });
+        assert_eq!(
+            indent_from_file("fixture/mixed-space.js"),
+            Indent {
+                amount: 4,
+                indent: "    ".to_string(),
+                kind: Some(IndentKind::Space)
+            }
+        );
     }
 
     #[test]
     fn mixed_tab() {
-        assert_eq!(indent_from_file("fixture/mixed-tab.js"),
-        Indent {
-            amount: 1,
-            indent: "\t".to_string(),
-            kind: Some(IndentKind::Tab)
-        });
+        assert_eq!(
+            indent_from_file("fixture/mixed-tab.js"),
+            Indent {
+                amount: 1,
+                indent: "\t".to_string(),
+                kind: Some(IndentKind::Tab)
+            }
+        );
     }
 
     #[test]
     fn space() {
-        assert_eq!(indent_from_file("fixture/space.js"),
-        Indent {
-            amount: 4,
-            indent: "    ".to_string(),
-            kind: Some(IndentKind::Space)
-        });
+        assert_eq!(
+            indent_from_file("fixture/space.js"),
+            Indent {
+                amount: 4,
+                indent: "    ".to_string(),
+                kind: Some(IndentKind::Space)
+            }
+        );
     }
-
 
     #[test]
     fn tab_four() {
-        assert_eq!(indent_from_file("fixture/tab-four.js"),
-        Indent {
-            amount: 4,
-            indent: "\t\t\t\t".to_string(),
-            kind: Some(IndentKind::Tab)
-        });
+        assert_eq!(
+            indent_from_file("fixture/tab-four.js"),
+            Indent {
+                amount: 4,
+                indent: "\t\t\t\t".to_string(),
+                kind: Some(IndentKind::Tab)
+            }
+        );
     }
 
     #[test]
     fn tab() {
-        assert_eq!(indent_from_file("fixture/tab.js"),
-        Indent {
-            amount: 1,
-            indent: "\t".to_string(),
-            kind: Some(IndentKind::Tab)
-        });
+        assert_eq!(
+            indent_from_file("fixture/tab.js"),
+            Indent {
+                amount: 1,
+                indent: "\t".to_string(),
+                kind: Some(IndentKind::Tab)
+            }
+        );
     }
 
     #[test]
     fn vendor_prefixed_css() {
-        assert_eq!(indent_from_file("fixture/vendor-prefixed-css.css"),
-        Indent {
-            amount: 4,
-            indent: "    ".to_string(),
-            kind: Some(IndentKind::Space)
-        });
+        assert_eq!(
+            indent_from_file("fixture/vendor-prefixed-css.css"),
+            Indent {
+                amount: 4,
+                indent: "    ".to_string(),
+                kind: Some(IndentKind::Space)
+            }
+        );
     }
 
     #[test]
@@ -229,7 +238,13 @@ mod tests {
         assert_eq!(most_used(&map), 2);
         map.insert(5, Usage { used: 4, weight: 4 });
         assert_eq!(most_used(&map), 5);
-        map.insert(1, Usage { used: 10, weight: 10});
+        map.insert(
+            1,
+            Usage {
+                used: 10,
+                weight: 10,
+            },
+        );
         assert_eq!(most_used(&map), 1);
     }
 
