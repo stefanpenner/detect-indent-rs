@@ -38,3 +38,4 @@ fn main() {
 
 The current algorithm looks for the most common difference between two
 consecutive non-empty lines. [More Details](https://github.com/sindresorhus/detect-indent)
+
