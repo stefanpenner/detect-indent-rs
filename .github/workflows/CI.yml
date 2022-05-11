@@ -1,0 +1,83 @@
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+name: Test
+
+jobs:
+  tests:
+    name: >
+      Tests: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu
+          - macos
+          - windows
+    runs-on: ${{ matrix.os }}-latest
+    env:
+      RUST_BACKTRACE: full
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - name: Set up cargo
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+          components: clippy
+
+      - uses: Swatinem/rust-cache@v1
+        with:
+          key: "1" # increment this to bust the cache if needed
+
+      - name: Run tests
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --all --features mock-network
+
+      - name: Lint with clippy
+        uses: actions-rs/cargo@v1
+        with:
+          command: clippy
+        # don't bother linting repeatedly
+        if: ${{ matrix.os == 'ubuntu-latest' }}
+
+  future_tests:
+    name: >
+      Tests: ${{ matrix.version }}
+    strategy:
+      matrix:
+        version:
+          - beta
+          - nightly
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - name: Set up cargo
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+          components: clippy
+
+      - uses: Swatinem/rust-cache@v1
+        with:
+          key: "1" # increment this to bust the cache if needed
+
+      - name: Run tests
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --all --features mock-network
