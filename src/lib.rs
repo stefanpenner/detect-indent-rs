@@ -115,13 +115,8 @@ pub fn detect_indent(string: &str) -> Indent {
                 .entry(key)
                 .or_insert(Usage { used: 0, weight: 0 })
                 .used += 1;
-        } else {
-            match current {
-                Some(key) => {
-                    indents.get_mut(&key).unwrap().used += 1;
-                }
-                None => {}
-            }
+        } else if let Some(key) = current {
+            indents.get_mut(&key).unwrap().used += 1;
         }
     }
 
