@@ -2,7 +2,7 @@
 name = "detect-indent"
 description = "Detect the indentation of code"
 version = "0.1.0"
-authors = ["Stefan Penner <stefan.penner@gmail.com>"]
+authors = ["Stefan Penner <stefan.penner@gmail.com>", "Chris Krycho <hello@chriskrycho.com>"]
 edition = "2021"
 
 [dependencies]
