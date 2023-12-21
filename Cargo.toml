@@ -4,6 +4,8 @@ description = "Detect the indentation of code"
 version = "0.1.0"
 authors = ["Stefan Penner <stefan.penner@gmail.com>", "Chris Krycho <hello@chriskrycho.com>"]
 edition = "2021"
+license = "BlueOak-1.0.0"
+repository = "https://github.com/stefanpenner/detect-indent-rs"
 
 [dependencies]
 regex = "1"
