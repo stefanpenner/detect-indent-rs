@@ -9,4 +9,3 @@ repository = "https://github.com/stefanpenner/detect-indent-rs"
 
 [dependencies]
 regex = "1"
-lazy_static = "1"

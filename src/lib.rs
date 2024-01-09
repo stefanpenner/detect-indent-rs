@@ -1,6 +1,5 @@
-use lazy_static::lazy_static;
 use regex::Regex;
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::OnceLock};
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum IndentKind {
@@ -63,11 +62,12 @@ fn most_used(indents: &HashMap<isize, Usage>) -> usize {
     result as usize
 }
 
-pub fn detect_indent(string: &str) -> Indent {
-    lazy_static! {
-        static ref INDENT_REGEX: Regex = Regex::new(r"^(?:( )+|\t+)").unwrap();
-    }
+static INDENT_REGEX: OnceLock<Regex> = OnceLock::new();
+fn get_indent_regex() -> &'static Regex {
+    INDENT_REGEX.get_or_init(|| Regex::new(r"^(?:( )+|\t+)").unwrap())
+}
 
+pub fn detect_indent(string: &str) -> Indent {
     let mut spaces = 0;
     let mut tabs = 0;
     let mut indents: HashMap<isize, Usage> = HashMap::new();
@@ -82,7 +82,7 @@ pub fn detect_indent(string: &str) -> Indent {
         }
         let mut indent = 0;
 
-        match INDENT_REGEX.captures(line) {
+        match get_indent_regex().captures(line) {
             Some(captures) => {
                 if let Some(capture) = captures.get(0) {
                     let string = capture.as_str();
